@@ -1,0 +1,54 @@
+name: Terraform Linter
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-format:
+    name: Linter
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v3
+
+      - name: Terraform version
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.11.1
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4.1.1
+
+      - name: Terraform Format
+        run: terraform fmt -recursive
+
+      - name: Commit changes if any
+        run: |
+          # Check if `terraform fmt` changed anything
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add .
+            git commit -m "chore: auto-format Terraform files"
+            git push
+          fi
+
+      - name: Terraform Validate
+        run: |
+          # For each directory that has .tf files, run `terraform init` (without backend) and `terraform validate`.
+          # This way, each module folder is validated independently.
+          for d in $(find . -name '*.tf' -exec dirname {} \; | sort -u); do
+            echo "Validating directory: $d"
+            (cd "$d" && terraform init -backend=false -input=false && terraform validate)
+          done
+
+      - name: TFLint
+        run: |
+          # If your repo has multiple modules in subfolders, you can run TFLint recursively:
+          tflint --recursive

@@ -1,36 +1,18 @@
-resource "azurerm_resource_group" "example" {
-  name     = "example-resources"
-  location = "West Europe"
-}
-
-resource "azurerm_kubernetes_cluster" "example" {
-  name                = "example-aks1"
-  location            = azurerm_resource_group.example.location
-  resource_group_name = azurerm_resource_group.example.name
-  dns_prefix          = "exampleaks1"
-
-  default_node_pool {
-    name       = "default"
-    node_count = 1
-    vm_size    = "Standard_D2_v2"
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg_${var.location}_core_${var.environment}"
+    storage_account_name = "sacorewesteurope${var.environment}"
+    container_name       = "terraform"
+    key                  = "infra.terraform.tfstate"
+    subscription_id      = data.azurerm_subscription.subscription.id
   }
 
-  identity {
-    type = "SystemAssigned"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">=4.0.1, <5.0.0"
+    }
   }
 
-  tags = {
-    Environment = "Production"
-  }
-}
-
-output "client_certificate" {
-  value     = azurerm_kubernetes_cluster.example.kube_config[0].client_certificate
-  sensitive = true
-}
-
-output "kube_config" {
-  value = azurerm_kubernetes_cluster.example.kube_config_raw
-
-  sensitive = true
+  required_version = ">=1.10.0"
 }
