@@ -1,8 +1,9 @@
+# TODO: this can be moved to external configuration
 variable "tags" {
   type        = map(any)
   description = "A mapping of tags assigned to resources"
   default = {
-    environment = "${var.environment}"
+    environment = "d"
     project     = "aks-gitops-PoC"
   }
 }
