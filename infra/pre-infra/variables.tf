@@ -1,5 +1,5 @@
-variable tags {
-  type = map(any)
+variable "tags" {
+  type        = map(any)
   description = "A mapping of tags assigned to resources"
   default = {
     environment = "${var.environment}"
